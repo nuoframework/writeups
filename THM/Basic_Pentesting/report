@@ -1,0 +1,78 @@
+------------------------------------------------------------------------------
+
+IP: 10.10.202.125 or 10.10.235.68
+OS: Linux Ubuntu (Xenial)
+Puertos Abiertos: 22,80,139,445,8080 (TCP)
+
+------------------------------------------------------------------------------
+
+CREDENCIALS:
+
+	USERS:
+				
+				kay, jan
+	
+	PASSWORDS:
+
+				 SSH  --> jan:armando
+				SAMBA --> 
+
+------------------------------------------------------------------------------
+
+Puedes ver mas informacion sobre los escaneos en el directorio "Scans/"
+
+------------------------------------------------------------------------------
+
+En primer lugar hacemos una busqueda de directorios con la herramienta "wfuzz", en el sitio "http://10.10.235.68:80/" y encontramos una ruta (http://10.10.235.68:80/development) la cual tiene activado el "Directory Listing", encontramos
+dos archivos 
+
+	- dev.txt
+	- j.txt
+
+Usamos enum4linux para intentar enumerar a los usuarios en samba y obtenemos los siguientes usuarios:
+
+	- kay
+	- jan
+
+Con hydra y el diccionario de "Seclists" (10-million-password-list-top-100000.txt) tras una laraga espera obtenemos la siguiente credencial:
+
+	[22][ssh] host: 10.10.11.114   login: jan   password: armando
+
+Entramos en el servidor ssh con las credenciales proporcionadas, y obtenemos acceso. Navegamos atraves del sistema pero no encontramos nada insteresante ya que el usuario "jan" casi que no tiene permisos:
+	
+	uid=1001(jan) gid=1001(jan) groups=1001(jan)
+
+Sin embargo; si miramos el id del usuario kay:
+
+	uid=1000(kay) gid=1000(kay) groups=1000(kay),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),110(lxd),115(lpadmin),116(sambashare)
+
+Esta en grupos interesantes como el 27, ademas casi todos los archivos que existen, solo tienen permisos de "root". Para la enumeracion de los usuarios, intentamos ver el /etc/passwd con exito y filtramos por bash:
+
+	root:x:0:0:root:/root:/bin/bash
+	kay:x:1000:1000:Kay,,,:/home/kay:/bin/bash
+	jan:x:1001:1001::/home/jan:/bin/bash
+
+Ahora vamos a intentar hacer una escalada de privilegios con "LinEnum". Nos pasamos al archivo de bash a la maquina victima lo ejecutamos:
+
+	[+] Possibly interesting SUID files:
+	-rwsr-xr-x 1 root root 2437320 Nov 24  2016 /usr/bin/vim.basic
+
+Ya hemos llegado casi al final, con este binario SUID vulnerable podremos leer archivos con permisos "root" siendo cualquier otro usuario. Llegado a este punto empezamos a leer archivos (todos estan adjuntos):
+
+	- /etc/group
+	- /etc/passwd
+	- /etc/shadow
+	- /home/kay/.ssh/id_rsa
+	- /samba/anonymous/staff.txt
+	- /home/kay/pass.bak
+
+En el archivo pass.bak se encuentra la flag. Y con esto ya habriamos vulnerado la maquina.
+
+---------------------------------------------------------------------------------------------
+
+Pwned by @nuoframework.
+
+	
+
+
+

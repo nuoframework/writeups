@@ -1,0 +1,54 @@
+-------------------------------------------------------------------------------
+
+IP Victima: 10.10.192.138
+OS: Ubuntu Linux (Xenial)
+
+IP Atacante: 10.18.123.132
+
+-------------------------------------------------------------------------------
+
+Puertos Abiertos: 21,80,2222 (tcp)
+
+--------------------------------- CREDENCIALES --------------------------------
+
+	- admin@admin.com:secret  <- CMS
+
+-------------------------------------------------------------------------------
+
+Tras realizar los escaneos de descubrimiento y analisis inicial, se ha obtenido la siguiente informacion:
+
+	- Se descubre que "apache" tiene como respuesta la "Default Page" de Ubuntu
+	- Se descubre que "ftp" tiene habilitado el inicio de sesion anonimo
+	- Se descubre que "ssh" esta corriendo en el puerto 2222
+	- Se supone que no hay contenedores que aislen los servicios ya que todos los servicios se corren para "Ubuntu Linux Xenial"
+
+Miramos la web alojada y efectivamente se trata de una "Default Page", aunque eso no impide que pueda haber directorios ocultos. Probamos con "wfuzz" y encontramos lo siguiente:
+
+	000004567:   0.048s       301        9 L        28 W     315 Ch      Apache/2.4.18 (Ubuntu)           http://10.10.192.138/simple/     "simple"
+
+Vamos al directorio oculto y encontramos un gestor de contenidos llamado "CMS made simple", en la pagina menciona que existe un panel de administracion en la siguiente ruta:
+
+	http://10.10.192.138/simple/admin/login.php
+
+Pero, nos dice que las credenciales son las que se proporcionaron en el proceso de instalacion, siendo imposible saber a ciencia cierta las credenciales. Comprobamos la version del CMS con "searchsploit" y:
+
+	CMS Made Simple < 2.2.10 - SQL Injection
+
+Como nuestra version es la 2.2.8, es vulnerable a SQLi. Usamos el exploit que viene con "searchsploit" y econtramos lo siguiente:
+
+	[+] Salt for password found: 1dac0d92e9fa6bb2
+	[+] Username found: mitch
+	[+] Email found: admin@admin.com
+	[+] Password cracked: secret
+
+Nos conectamos con "ssh". Si navegamos obtenemos la flg "user.txt" y ademas podemos ver en el directorio /home/ otro usuario llamado "sunbath". Para poder elevar privilegios ya que el usuario con el que hemos entrado "mitch" no tiene
+permisos de sudo, primero podemos ver con (sudo -l):
+
+	(root) NOPASSWD: /usr/bin/vim
+
+Sabiendo que podemos usar vim con sudo sin necesidad de contraseña, vamos a (https://gtfobins.github.io/gtfobins/vim/) y vemos que con "vim -c ':!/bin/sh'" podemos invocar una shell. Obtenemos permisos de sudo (sudo vim -c ':!/bin/sh') y ya
+podemos ver la flag "root.txt"
+
+-------------------------------------------------------------------------------
+
+Pwned by @nuoframework

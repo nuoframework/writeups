@@ -1,0 +1,6 @@
+PING 10.10.235.68 (10.10.235.68) 56(84) bytes of data.
+64 bytes from 10.10.235.68: icmp_seq=1 ttl=63 time=48.0 ms
+
+--- 10.10.235.68 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 47.984/47.984/47.984/0.000 ms

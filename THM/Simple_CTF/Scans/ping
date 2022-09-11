@@ -1,0 +1,6 @@
+PING 10.10.192.138 (10.10.192.138) 56(84) bytes of data.
+64 bytes from 10.10.192.138: icmp_seq=1 ttl=63 time=52.9 ms
+
+--- 10.10.192.138 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 52.929/52.929/52.929/0.000 ms
